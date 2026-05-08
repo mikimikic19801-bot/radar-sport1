@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fudbal Radar</title>
+    <title>Sport radar</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#030712">
     <link rel="apple-touch-icon" href="icon-192.png">
@@ -174,13 +174,22 @@
         }
 
         .alert-box {
-            background: rgba(239, 68, 68, 0.1); 
-            color: #f87171;
+            background: rgba(16, 185, 129, 0.1); 
+            color: #34d399;
             padding: 12px 16px; border-radius: 12px; 
             font-size: 13px; font-weight: 700; 
             text-align: center; 
-            border: 1px solid rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.2);
             line-height: 1.4;
+        }
+
+        .info-box {
+            background: rgba(55, 65, 81, 0.3);
+            color: var(--text-muted);
+            padding: 10px 14px; border-radius: 12px;
+            font-size: 12px; font-weight: 600;
+            text-align: center;
+            border: 1px solid rgba(55, 65, 81, 0.5);
         }
     </style>
 </head>
@@ -188,7 +197,7 @@
 
 <div class="app-container">
     <header>
-        <h1><span class="radar-pulse"></span>FUDBAL <span>RADAR</span></h1>
+        <h1><span class="radar-pulse"></span>Sport <span>radar</span></h1>
     </header>
 
     <div class="action-card">
@@ -207,12 +216,12 @@
     <div id="radarMonitor">
         <div style="text-align: center; color: var(--text-muted); padding: 40px 20px;">
             <p style="font-size: 15px; margin: 0 0 10px 0; font-weight: 600;">Satelit u pripravnosti.</p>
-            <p style="font-size: 13px; margin: 0; color: #6b7280;">Svi sportovi su povezani na tvoj API ključ.</p>
+            <p style="font-size: 13px; margin: 0; color: #6b7280;">Svi sportovi su aktivni na tvom API profilu.</p>
         </div>
     </div>
 </div>
 
-<script>
+<script {nonce}>
     const API_KEY = "f1cce1e4be71307c45a7a206e4a16495";
     let autoInterval = null;
     let knownAlerts = new Set();
@@ -228,17 +237,17 @@
             const gainNode = audioCtx.createGain();
 
             oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(1500, audioCtx.currentTime);
-            oscillator.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.4);
+            oscillator.frequency.setValueAtTime(1600, audioCtx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(900, audioCtx.currentTime + 0.35);
 
-            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            gainNode.gain.setValueAtTime(0.35, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
 
             oscillator.connect(gainNode);
             gainNode.connect(audioCtx.destination);
 
             oscillator.start();
-            oscillator.stop(audioCtx.currentTime + 0.4);
+            oscillator.stop(audioCtx.currentTime + 0.35);
         } catch (e) {
             console.log("Audio blokiran.");
         }
@@ -255,7 +264,7 @@
                 reg.showNotification(title, {
                     body: body,
                     icon: "https://cdn-icons-png.flaticon.com/512/2619/2619245.png",
-                    vibrate: [500, 100, 500],
+                    vibrate: [400, 100, 400],
                     badge: "https://cdn-icons-png.flaticon.com/512/2619/2619245.png"
                 });
             });
@@ -290,7 +299,6 @@
             monitor.innerHTML = '<p style="text-align: center; color: var(--accent); font-weight: 700; padding: 40px 0;">Skeniram satelitske podatke za sve sportove...</p>';
         }
 
-        // Svaki zahtev ide u odvojeni try-catch kako neuspeh jednog ne bi srušio celu aplikaciju
         let soccerData = [];
         let basketData = [];
         let handballData = [];
@@ -298,19 +306,19 @@
         try {
             soccerData = await fetchFromAPI('fixtures?live=all', 'v3.football.api-sports.io');
         } catch (e) {
-            console.error("Greška pri učitavanju fudbala:", e);
+            console.error("Fudbal API Offline:", e);
         }
 
         try {
             basketData = await fetchFromAPI('games?live=all', 'v1.basketball.api-sports.io');
         } catch (e) {
-            console.error("Greška pri učitavanju košarke:", e);
+            console.error("Košarka API Offline:", e);
         }
 
         try {
             handballData = await fetchFromAPI('games?live=all', 'v1.handball.api-sports.io');
         } catch (e) {
-            console.error("Greška pri učitavanju rukometa:", e);
+            console.error("Rukomet API Offline:", e);
         }
 
         renderAllResults(soccerData, basketData, handballData);
@@ -319,40 +327,40 @@
     function renderAllResults(soccer, basketball, handball) {
         const monitor = document.getElementById('radarMonitor');
         monitor.innerHTML = '';
-        let totalAlerts = 0;
+        let totalElementsAdded = 0;
 
         // 1. FUDBAL SEKCIJA
-        const soccerAlerts = analyzeSoccer(soccer);
-        if (soccerAlerts.length > 0) {
-            totalAlerts += soccerAlerts.length;
+        const soccerElements = analyzeSoccer(soccer);
+        if (soccerElements.length > 0) {
+            totalElementsAdded += soccerElements.length;
             const group = createSportGroup("Fudbal Radar", "soccer", "⚽");
-            soccerAlerts.forEach(card => group.appendChild(card));
+            soccerElements.forEach(card => group.appendChild(card));
             monitor.appendChild(group);
         }
 
         // 2. KOŠARKA SEKCIJA
-        const basketAlerts = analyzeBasketball(basketball);
-        if (basketAlerts.length > 0) {
-            totalAlerts += basketAlerts.length;
+        const basketElements = analyzeBasketball(basketball);
+        if (basketElements.length > 0) {
+            totalElementsAdded += basketElements.length;
             const group = createSportGroup("Košarka Radar", "basketball", "🏀");
-            basketAlerts.forEach(card => group.appendChild(card));
+            basketElements.forEach(card => group.appendChild(card));
             monitor.appendChild(group);
         }
 
         // 3. RUKOMET SEKCIJA
-        const handballAlerts = analyzeHandball(handball);
-        if (handballAlerts.length > 0) {
-            totalAlerts += handballAlerts.length;
+        const handballElements = analyzeHandball(handball);
+        if (handballElements.length > 0) {
+            totalElementsAdded += handballElements.length;
             const group = createSportGroup("Rukomet Radar", "handball", "🤾");
-            handballAlerts.forEach(card => group.appendChild(card));
+            handballElements.forEach(card => group.appendChild(card));
             monitor.appendChild(group);
         }
 
-        if (totalAlerts === 0) {
+        if (totalElementsAdded === 0) {
             monitor.innerHTML = `
                 <div style="text-align: center; color: var(--text-muted); padding: 40px 20px;">
-                    <p style="font-size: 15px; margin: 0 0 10px 0; font-weight: 600;">Skeniranje završeno.</p>
-                    <p style="font-size: 13px; margin: 0; color: #6b7280;">Nema trenutno aktivnih signala koji zadovoljavaju algoritme.</p>
+                    <p style="font-size: 15px; margin: 0 0 10px 0; font-weight: 600;">Skeniranje uspešno.</p>
+                    <p style="font-size: 13px; margin: 0; color: #6b7280;">Nema trenutno aktivnih utakmica na mreži.</p>
                 </div>
             `;
         }
@@ -370,7 +378,7 @@
     }
 
     function analyzeSoccer(fixtures) {
-        const cards = [];
+        const elements = [];
         fixtures.forEach(match => {
             const matchId = "soc_" + match.fixture.id;
             const homeTeam = match.teams.home.name;
@@ -385,50 +393,84 @@
 
             if (elapsed >= 45 && elapsed <= 65 && awayScore > homeScore) {
                 isAlert = true;
-                alertReason = "🔥 LIVE VALUE: Domaći favorit gubi na poluvremenu! Očekuje se pritisak.";
+                alertReason = "🔥 LIVE VALUE: Favorit gubi! Kvote na preokret i golove rastu.";
             }
-            if (elapsed >= 80 && homeScore === awayScore) {
+            else if (elapsed >= 75 && elapsed <= 85 && homeScore === 0 && awayScore === 0) {
                 isAlert = true;
-                alertReason = "⚡ FINIŠ ALARM: Nerešeno u finišu meča! Velika šansa za kasni gol.";
+                alertReason = "⏰ FINIŠ DRAMA: Meč je na 0:0 u " + elapsed + "'. minutu. Traži se kasni gol!";
+            }
+            else if (elapsed >= 50 && elapsed <= 75 && homeScore === 1 && awayScore === 1) {
+                isAlert = true;
+                alertReason = "⚡ RESET KVOTE: 1:1 na terenu! Favorit juri vraćanje vođstva.";
             }
 
             if (isAlert) {
-                cards.push(createMatchCard(league, elapsed, homeTeam, awayTeam, `${homeScore}:${awayScore}`, alertReason));
-                sendNotification("Fudbal Radar Signal!", `${homeTeam} - ${awayTeam} (${elapsed}'). ${alertReason}`, matchId);
+                elements.push(createMatchCard(league, elapsed + "'", homeTeam, awayTeam, `${homeScore}:${awayScore}`, alertReason, true));
+                sendNotification("Sport radar Signal!", `${homeTeam} - ${awayTeam} (${elapsed}'). ${alertReason}`, matchId);
+            } else {
+                elements.push(createMatchCard(league, elapsed + "'", homeTeam, awayTeam, `${homeScore}:${awayScore}`, "Pratimo situaciju...", false));
             }
         });
-        return cards;
+        return elements;
     }
 
     function analyzeBasketball(games) {
-        const cards = [];
+        const elements = [];
         games.forEach(game => {
             const gameId = "bask_" + game.id;
             const homeTeam = game.teams.home.name;
             const awayTeam = game.teams.away.name;
             const homeScore = game.scores.home.total || 0;
             const awayScore = game.scores.away.total || 0;
-            const quarter = game.status.short; 
+            const status = game.status.short; 
             const league = game.league.name;
+
+            // Dohvatanje poena po četvrtinama
+            const q1Home = game.scores.home.quarter_1 || 0;
+            const q1Away = game.scores.away.quarter_1 || 0;
+            const q2Home = game.scores.home.quarter_2 || 0;
+            const q2Away = game.scores.away.quarter_2 || 0;
+            const q3Home = game.scores.home.quarter_3 || 0;
+            const q3Away = game.scores.away.quarter_3 || 0;
 
             let isAlert = false;
             let alertReason = "";
 
-            if (quarter === "Q4" && Math.abs(homeScore - awayScore) <= 3) {
+            // LOGIKA A: Favorit gubi na poluvremenu (HT / Q3)
+            if ((status === "HT" || status === "Q3") && homeScore !== awayScore) {
                 isAlert = true;
-                alertReason = "🏀 KOŠARKA LIVE: Drama u finišu meča! Razlika je samo 3 ili manje poena.";
+                alertReason = "🏀 POLUVREME ALARM: Favorit gubi na poluvremenu! Očekuje se snažan pritisak u nastavku.";
+            }
+            // LOGIKA B: Favorit je izgubio neku od četvrtina sa dvocifrenom razlikom (kontra-trend)
+            else {
+                const diffQ1 = Math.abs(q1Home - q1Away);
+                const diffQ2 = Math.abs(q2Home - q2Away);
+                const diffQ3 = Math.abs(q3Home - q3Away);
+
+                if (diffQ1 >= 10 && status === "Q2") {
+                    isAlert = true;
+                    alertReason = "🔥 KONTRA-TREND: Favorit je izgubio prvu četvrtinu sa " + diffQ1 + " razlike! Traži se odgovor.";
+                } else if (diffQ2 >= 10 && status === "Q3") {
+                    isAlert = true;
+                    alertReason = "🔥 KONTRA-TREND: Favorit je izgubio drugu četvrtinu sa " + diffQ2 + " razlike! Traži se odgovor.";
+                } else if (diffQ3 >= 10 && status === "Q4") {
+                    isAlert = true;
+                    alertReason = "🔥 KONTRA-TREND: Favorit je izgubio treću četvrtinu sa " + diffQ3 + " razlike! Traži se odgovor.";
+                }
             }
 
             if (isAlert) {
-                cards.push(createMatchCard(league, quarter, homeTeam, awayTeam, `${homeScore}:${awayScore}`, alertReason));
-                sendNotification("Košarka Radar Signal!", `${homeTeam} - ${awayTeam} (${quarter}). ${alertReason}`, gameId);
+                elements.push(createMatchCard(league, status, homeTeam, awayTeam, `${homeScore}:${awayScore}`, alertReason, true));
+                sendNotification("Košarka Radar Signal!", `${homeTeam} - ${awayTeam} (${status}). ${alertReason}`, gameId);
+            } else {
+                elements.push(createMatchCard(league, status, homeTeam, awayTeam, `${homeScore}:${awayScore}`, "Pratimo kretanje rezultata...", false));
             }
         });
-        return cards;
+        return elements;
     }
 
     function analyzeHandball(games) {
-        const cards = [];
+        const elements = [];
         games.forEach(game => {
             const gameId = "hand_" + game.id;
             const homeTeam = game.teams.home.name;
@@ -437,26 +479,38 @@
             const awayScore = game.scores.away || 0;
             const elapsed = game.status.short; 
             const league = game.league.name;
+            const totalGoals = homeScore + awayScore;
 
             let isAlert = false;
             let alertReason = "";
 
             if (elapsed === "SH2" && awayScore > homeScore) {
                 isAlert = true;
-                alertReason = "🤾 RUKOMET LIVE: Gost vodi u drugom poluvremenu! Očekuje se reakcija domaćina.";
+                alertReason = "🤾 NEOČEKIVANO: Gost vodi u drugom poluvremenu! Očekuje se odgovor.";
+            }
+            else if (elapsed === "HT" && (totalGoals <= 18 || totalGoals >= 35)) {
+                isAlert = true;
+                alertReason = "📊 POLUVREME ANOMALIJA: Postignuto je " + totalGoals + " golova! Granica za golove se pomera.";
             }
 
             if (isAlert) {
-                cards.push(createMatchCard(league, "Uživo", homeTeam, awayTeam, `${homeScore}:${awayScore}`, alertReason));
+                elements.push(createMatchCard(league, "Uživo", homeTeam, awayTeam, `${homeScore}:${awayScore}`, alertReason, true));
                 sendNotification("Rukomet Radar Signal!", `${homeTeam} - ${awayTeam}. ${alertReason}`, gameId);
+            } else {
+                elements.push(createMatchCard(league, "Uživo", homeTeam, awayTeam, `${homeScore}:${awayScore}`, "Pratimo golove...", false));
             }
         });
-        return cards;
+        return elements;
     }
 
-    function createMatchCard(league, meta, home, away, score, alertText) {
+    function createMatchCard(league, meta, home, away, score, text, isAlert) {
         const card = document.createElement('div');
         card.className = 'match-card';
+        
+        const bottomBox = isAlert 
+            ? `<div class="alert-box">${text}</div>` 
+            : `<div class="info-box">${text}</div>`;
+
         card.innerHTML = `
             <div class="match-meta">
                 <span>🏆 ${league}</span>
@@ -467,7 +521,7 @@
                 <span class="score-box">${score}</span>
                 <span class="team-name away">${away}</span>
             </div>
-            <div class="alert-box">${alertText}</div>
+            ${bottomBox}
         `;
         return card;
     }
