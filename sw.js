@@ -1,11 +1,10 @@
-const cacheName = 'radar-v3-multisport';
+const cacheName = 'sport-radar-v4';
 const assets = [
   './',
   'index.html',
   'manifest.json'
 ];
 
-// Instalacija keša i skladištenje fajlova
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(cacheName).then(cache => {
@@ -15,7 +14,6 @@ self.addEventListener('install', e => {
   self.skipWaiting();
 });
 
-// Aktivacija i čišćenje prethodnih verzija
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys => {
@@ -31,14 +29,12 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// Strategija mrežnog prioriteta za sveže sportske signale
 self.addEventListener('fetch', e => {
   e.respondWith(
     fetch(e.request).catch(() => caches.match(e.request))
   );
 });
 
-// Fokusiranje na otvorenu aplikaciju ili otvaranje nove pri kliku na alarm
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   e.waitUntil(
